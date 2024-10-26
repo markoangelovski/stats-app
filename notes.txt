@@ -1,0 +1,1 @@
+In file .eslintrc.json remove entire rules key and the array.
