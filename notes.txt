@@ -1,4 +1,5 @@
-In file .eslintrc.json remove entire rules key and the array.
+Main tut: https://www.youtube.com/watch?v=1MTyCvS05V4
+
 
 docker run \
   --name postgres-container \

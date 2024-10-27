@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +24,7 @@ import { RegisterSchema } from "@/schemas";
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   const form = useForm<z.infer<typeof RegisterSchema>>({
     resolver: zodResolver(RegisterSchema),
@@ -34,12 +35,10 @@ export default function RegisterPage() {
     }
   });
 
-  const handleSubmit = async (values: z.infer<typeof RegisterSchema>) => {
-    console.log("values: ", values);
-
-    const response = await register(values);
-
-    console.log("response: ", response);
+  const handleSubmit = (values: z.infer<typeof RegisterSchema>) => {
+    startTransition(() => {
+      register(values);
+    });
   };
 
   return (
@@ -68,6 +67,7 @@ export default function RegisterPage() {
                           required
                           className="mt-1"
                           placeholder="JohnDoe"
+                          disabled={isPending}
                         />
                       </FormControl>
                       <FormMessage />
@@ -90,6 +90,7 @@ export default function RegisterPage() {
                           required
                           className="mt-1"
                           placeholder="john@doe.com"
+                          disabled={isPending}
                         />
                       </FormControl>
                       <FormMessage />
@@ -113,6 +114,7 @@ export default function RegisterPage() {
                             required
                             className="mt-1"
                             placeholder="A secure password"
+                            disabled={isPending}
                           />
                         </FormControl>
                         <button
@@ -148,7 +150,7 @@ export default function RegisterPage() {
 
             <div>
               <Button type="submit" className="w-full">
-                Register
+                {isPending ? "Loading..." : "Register"}
               </Button>
             </div>
           </form>
