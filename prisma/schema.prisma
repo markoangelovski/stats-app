@@ -1,0 +1,53 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+}
+
+model User {
+  id           String    @id @default(cuid())
+  username     String    @db.VarChar(50)
+  email        String    @unique @db.VarChar(100)
+  passwordHash String    @db.VarChar(255)
+  dateCreated  DateTime  @default(now())
+  dateModified DateTime?
+  lastLogin    DateTime?
+
+  stats     Stat[]     @relation("UserStats")
+  statItems StatItem[] @relation("UserStatItems")
+}
+
+model Stat {
+  id               String    @id @default(cuid())
+  user_id          String
+  name             String    @db.VarChar(100)
+  description      String?   @db.VarChar(500)
+  measurementLabel String?   @db.VarChar(50)
+  dateCreated      DateTime  @default(now())
+  dateModified     DateTime?
+
+  user      User       @relation("UserStats", fields: [user_id], references: [id])
+  statItems StatItem[] @relation("StatItems")
+}
+
+model StatItem {
+  id           String   @id @default(cuid())
+  stat_id      String
+  user_id      String
+  dateOfEntry  DateTime
+  numericValue Float
+  note         String?  @db.VarChar(100)
+
+  stat Stat @relation("StatItems", fields: [stat_id], references: [id])
+  user User @relation("UserStatItems", fields: [user_id], references: [id])
+}
