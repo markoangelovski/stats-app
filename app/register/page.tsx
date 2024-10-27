@@ -21,10 +21,14 @@ import {
 
 import { register } from "@/actions";
 import { RegisterSchema } from "@/schemas";
+import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
+import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof RegisterSchema>>({
     resolver: zodResolver(RegisterSchema),
@@ -36,9 +40,11 @@ export default function RegisterPage() {
   });
 
   const handleSubmit = (values: z.infer<typeof RegisterSchema>) => {
-    startTransition(() => {
-      register(values);
+    startTransition(async () => {
+      await register(values);
     });
+
+    router.push(DEFAULT_LOGIN_REDIRECT);
   };
 
   return (

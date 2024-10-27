@@ -1,5 +1,3 @@
-import { StatsPage } from "@/components/app-stats-page";
-
-export default function Page() {
-  return <StatsPage />;
+export default function Home() {
+  return <div>You should not be here.</div>;
 }
