@@ -32,9 +32,20 @@ import {
 import { getStats, newStat, deleteStat } from "@/actions";
 import { Skeleton } from "@/components/ui/skeleton";
 
+type Stat = {
+  name: string;
+  description: string | null;
+  label?: string | null; // Added | null to handle potential null values
+  id?: string;
+  dateCreated?: Date;
+  dateModified?: Date | null;
+  user_id?: string;
+  measurementLabel?: string | null; // Added measurementLabel
+};
+
 export default function SettingsPage() {
   const [username, setUsername] = useState("");
-  const [stats, setStats] = useState<any[]>([]);
+  const [stats, setStats] = useState<Stat[]>([]);
   const [editingStatId, setEditingStatId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
@@ -80,12 +91,12 @@ export default function SettingsPage() {
     newStatForm.reset();
   };
 
-  const handleEditStat = (stat: any) => {
-    setEditingStatId(stat.id);
+  const handleEditStat = (stat: Stat) => {
+    setEditingStatId(stat.id || "");
     updateStatForm.reset({
       name: stat.name,
-      description: stat.description,
-      label: stat.measurementLabel
+      description: stat.description || "",
+      label: stat.measurementLabel || ""
     });
   };
 
@@ -103,9 +114,7 @@ export default function SettingsPage() {
         setError(result.message);
         return;
       }
-      setStats((prevStats) =>
-        prevStats.filter((stat: any) => stat.id !== statId)
-      );
+      setStats((prevStats) => prevStats.filter((stat) => stat.id !== statId));
       setError("");
     } catch (error) {
       setError("Failed to delete stat");
@@ -215,7 +224,7 @@ export default function SettingsPage() {
           <Skeleton className="rounded-xl h-48 w-full" />
         </>
       ) : (
-        stats.map((stat: any) => (
+        stats.map((stat) => (
           <Card key={stat.id}>
             <CardHeader>
               <CardTitle>{stat.name}</CardTitle>
@@ -309,7 +318,7 @@ export default function SettingsPage() {
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction
-                            onClick={() => handleDeleteStat(stat.id)}
+                            onClick={() => handleDeleteStat(stat.id || "")}
                             className="bg-red-600 hover:bg-red-700"
                           >
                             Delete
