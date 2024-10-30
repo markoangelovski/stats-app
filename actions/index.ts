@@ -4,9 +4,9 @@ import bcryptjs from "bcryptjs";
 import { AuthError } from "next-auth";
 import * as z from "zod";
 
-import { signIn } from "@/auth";
+import { signIn, auth } from "@/auth";
 import { prisma } from "@/lib/db";
-import { LoginSchema, RegisterSchema } from "@/schemas";
+import { LoginSchema, RegisterSchema, StatSchema } from "@/schemas";
 import { getUserByEmail } from "@/lib/utils";
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
 
@@ -67,5 +67,78 @@ export const register = async (values: z.infer<typeof RegisterSchema>) => {
   } catch (error) {
     console.error("Serv act err: ", error);
     return { message: error };
+  }
+};
+
+export const newStat = async (values: z.infer<typeof StatSchema>) => {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    return { message: "Unauthorized" };
+  }
+
+  const validationResult = StatSchema.safeParse(values);
+  if (!validationResult.success) {
+    return { message: "Invalid fields!" };
+  }
+  const { name, description, label } = validationResult.data;
+
+  try {
+    const existingStat = await prisma.stat.findFirst({
+      where: { name, user_id: session.user.id }
+    });
+
+    if (existingStat) {
+      return { message: "Stat already exists!" };
+    }
+
+    await prisma.stat.create({
+      data: {
+        name,
+        description,
+        measurementLabel: label,
+        user_id: session.user.id
+      }
+    });
+
+    return { message: `Stat "${name}" created successfully!` };
+  } catch (error) {
+    console.error("Error creating stat:", error);
+    return { message: "Error creating stat!" };
+  }
+};
+
+export const getStats = async () => {
+  // TODO: Move authorization check to utils
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { message: "Unauthorized" };
+  }
+  // TODO: Return uniform object {hasErrors: boolean, message: string, stats: any[]}
+  try {
+    const stats = await prisma.stat.findMany({
+      where: { user_id: session.user.id }
+    });
+    return { stats };
+  } catch (error) {
+    console.error("Error fetching stats:", error);
+    return { message: "Error fetching stats!" };
+  }
+};
+
+export const deleteStat = async (statId: string) => {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { message: "Unauthorized" };
+  }
+
+  try {
+    await prisma.stat.delete({
+      where: { id: statId, user_id: session.user.id }
+    });
+    return { message: "Stat deleted successfully!" };
+  } catch (error) {
+    console.error("Error deleting stat:", error);
+    return { message: "Error deleting stat!" };
   }
 };
