@@ -29,18 +29,18 @@ import {
   FormLabel,
   FormMessage
 } from "@/components/ui/form";
-import { getStats, newStat, deleteStat } from "@/actions";
+import { getStats, newStat, deleteStat, updateStat } from "@/actions";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type Stat = {
   name: string;
   description: string | null;
-  label?: string | null; // Added | null to handle potential null values
+  label?: string | null;
   id?: string;
   dateCreated?: Date;
   dateModified?: Date | null;
   user_id?: string;
-  measurementLabel?: string | null; // Added measurementLabel
+  measurementLabel?: string | null;
 };
 
 export default function SettingsPage() {
@@ -85,13 +85,13 @@ export default function SettingsPage() {
         setError(result.message);
       } else {
         setError("");
-        fetchStats(); // Added fetchStats here
+        fetchStats();
       }
     });
     newStatForm.reset();
   };
 
-  const handleEditStat = (stat: Stat) => {
+  const handleEditStat = async (stat: Stat) => {
     setEditingStatId(stat.id || "");
     updateStatForm.reset({
       name: stat.name,
@@ -101,8 +101,15 @@ export default function SettingsPage() {
   };
 
   const handleUpdateStat = async (data: z.infer<typeof StatSchema>) => {
-    // TODO: Implement stat update logic
-    console.log("Update stat:", data);
+    startTransition(async () => {
+      const result = await updateStat(data, editingStatId!);
+      if (typeof result === "object" && result.message) {
+        setError(result.message);
+      } else {
+        setError("");
+        fetchStats();
+      }
+    });
     setEditingStatId(null);
     updateStatForm.reset();
   };
@@ -119,6 +126,11 @@ export default function SettingsPage() {
     } catch (error) {
       setError("Failed to delete stat");
     }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingStatId(null);
+    updateStatForm.reset();
   };
 
   const fetchStats = async () => {
@@ -292,7 +304,12 @@ export default function SettingsPage() {
                         </FormItem>
                       )}
                     />
-                    <Button type="submit">Update Stat</Button>
+                    <div className="flex space-x-2">
+                      <Button type="submit">Update Stat</Button>
+                      <Button variant="secondary" onClick={handleCancelEdit}>
+                        Cancel
+                      </Button>
+                    </div>
                   </form>
                 </Form>
               ) : (

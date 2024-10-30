@@ -126,6 +126,36 @@ export const getStats = async () => {
   }
 };
 
+export const updateStat = async (
+  values: z.infer<typeof StatSchema>,
+  id: string
+) => {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { message: "Unauthorized" };
+  }
+
+  const validationResult = StatSchema.safeParse(values);
+  if (!validationResult.success) {
+    return { message: "Invalid fields!" };
+  }
+
+  try {
+    await prisma.stat.update({
+      where: { id: id, user_id: session.user.id },
+      data: {
+        name: values.name,
+        description: values.description,
+        measurementLabel: values.label
+      }
+    });
+    return { message: "Stat updated successfully!" };
+  } catch (error) {
+    console.error("Error updating stat:", error);
+    return { message: "Error updating stat!" };
+  }
+};
+
 export const deleteStat = async (statId: string) => {
   const session = await auth();
   if (!session?.user?.id) {
