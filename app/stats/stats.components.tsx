@@ -147,6 +147,7 @@ const StatCard = ({
 
   const handleUpdateStats = async () => {
     const result = await getStatsWithItems(dateRange);
+    console.log("handleUpdateStats result: ", result);
     if (!result.hasErrors) {
       setCurrentStat(result.data[0]);
     }
