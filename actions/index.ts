@@ -6,7 +6,12 @@ import * as z from "zod";
 
 import { signIn, auth } from "@/auth";
 import { prisma } from "@/lib/db";
-import { LoginSchema, RegisterSchema, StatSchema } from "@/schemas";
+import {
+  LoginSchema,
+  RegisterSchema,
+  StatItemSchema,
+  StatSchema
+} from "@/schemas";
 import { getUserByEmail } from "@/lib/utils";
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
 
@@ -16,11 +21,14 @@ export interface Resp<D> {
   data: D;
 }
 
-export interface StatWithItems {
+export interface Stat {
   id: string;
   name: string;
   description: string | null;
   measurementLabel: string | null;
+}
+
+export interface StatWithItems extends Stat {
   statItems: StatItem[];
 }
 
@@ -107,12 +115,12 @@ export const newStat = async (values: z.infer<typeof StatSchema>) => {
   const session = await auth();
 
   if (!session?.user?.id) {
-    return { message: "Unauthorized" };
+    return responseWithItems(true, "Unauthorized", []);
   }
 
   const validationResult = StatSchema.safeParse(values);
   if (!validationResult.success) {
-    return { message: "Invalid fields!" };
+    return responseWithItems(true, "Invalid fields!", []);
   }
   const { name, description, label } = validationResult.data;
 
@@ -122,7 +130,7 @@ export const newStat = async (values: z.infer<typeof StatSchema>) => {
     });
 
     if (existingStat) {
-      return { message: "Stat already exists!" };
+      return responseWithItems(true, "Stat already exists!", []);
     }
 
     await prisma.stat.create({
@@ -134,27 +142,32 @@ export const newStat = async (values: z.infer<typeof StatSchema>) => {
       }
     });
 
-    return { message: `Stat "${name}" created successfully!` };
+    return responseWithItems(false, `Stat "${name}" created successfully!`, []);
   } catch (error) {
     console.error("Error creating stat:", error);
-    return { message: "Error creating stat!" };
+    return responseWithItems(true, "Error creating stat!", []);
   }
 };
 
 export const getStats = async () => {
   const session = await auth();
   if (!session?.user?.id) {
-    return { message: "Unauthorized" };
+    return responseWithItems(true, "Unauthorized", []);
   }
-  // TODO: Return uniform object {hasErrors: boolean, message: string, stats: any[]}
   try {
     const stats = await prisma.stat.findMany({
-      where: { user_id: session.user.id }
+      where: { user_id: session.user.id },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        measurementLabel: true
+      }
     });
-    return { stats };
+    return responseWithItems(false, "Stats fetched successfully!", stats);
   } catch (error) {
     console.error("Error fetching stats:", error);
-    return { message: "Error fetching stats!" };
+    return responseWithItems(true, "Error fetching stats!", []);
   }
 };
 
@@ -164,12 +177,12 @@ export const updateStat = async (
 ) => {
   const session = await auth();
   if (!session?.user?.id) {
-    return { message: "Unauthorized" };
+    return responseWithItems(true, "Unauthorized", []);
   }
 
   const validationResult = StatSchema.safeParse(values);
   if (!validationResult.success) {
-    return { message: "Invalid fields!" };
+    return responseWithItems(true, "Invalid fields!", []);
   }
 
   try {
@@ -181,27 +194,30 @@ export const updateStat = async (
         measurementLabel: values.label
       }
     });
-    return { message: "Stat updated successfully!" };
+    return responseWithItems(false, "Stat updated successfully!", []);
   } catch (error) {
     console.error("Error updating stat:", error);
-    return { message: "Error updating stat!" };
+    return responseWithItems(true, "Error updating stat!", []);
   }
 };
 
 export const deleteStat = async (statId: string) => {
   const session = await auth();
   if (!session?.user?.id) {
-    return { message: "Unauthorized" };
+    return responseWithItems(true, "Unauthorized", []);
   }
 
   try {
     await prisma.stat.delete({
-      where: { id: statId, user_id: session.user.id }
+      where: { id: statId, user_id: session.user.id },
+      include: {
+        statItems: true
+      }
     });
-    return { message: "Stat deleted successfully!" };
+    return responseWithItems(false, "Stat deleted successfully!", []);
   } catch (error) {
     console.error("Error deleting stat:", error);
-    return { message: "Error deleting stat!" };
+    return responseWithItems(true, "Error deleting stat!", []);
   }
 };
 
@@ -232,6 +248,9 @@ export const getStatsWithItems = async () => {
               lte: lastDayOfMonth
             }
           },
+          orderBy: {
+            dateOfEntry: "asc"
+          },
           select: {
             id: true,
             dateOfEntry: true,
@@ -241,7 +260,7 @@ export const getStatsWithItems = async () => {
         }
       }
     });
-    console.log("statsWithItems: ", statsWithItems);
+
     return responseWithItems(
       false,
       "Stats fetched successfully!",
@@ -250,5 +269,90 @@ export const getStatsWithItems = async () => {
   } catch (error) {
     console.error("Error fetching stats with items:", error);
     return responseWithItems(true, "Error fetching stats with items!", []);
+  }
+};
+
+export const newStatItem = async (
+  statId: string,
+  values: z.infer<typeof StatItemSchema>
+) => {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return responseWithItems(true, "Unauthorized", []);
+  }
+
+  const validationResult = StatItemSchema.safeParse(values);
+
+  if (!validationResult.success) {
+    return responseWithItems(true, "Invalid stat item data!", []);
+  }
+
+  try {
+    const statItem = await prisma.statItem.create({
+      data: {
+        stat_id: statId,
+        user_id: session.user.id,
+        dateOfEntry: values.dateOfEntry,
+        numericValue: values.numericValue,
+        note: values.note
+      }
+    });
+    return responseWithItems(false, "Stat item created successfully!", [
+      statItem
+    ]);
+  } catch (error) {
+    console.error("Error creating stat item:", error);
+    return responseWithItems(true, "Error creating stat item!", []);
+  }
+};
+
+export const updateStatItem = async (
+  statId: string,
+  itemId: string,
+  values: z.infer<typeof StatItemSchema>
+) => {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return responseWithItems(true, "Unauthorized", []);
+  }
+
+  const validationResult = StatItemSchema.safeParse(values);
+
+  if (!validationResult.success) {
+    return responseWithItems(true, "Invalid stat item data!", []);
+  }
+
+  try {
+    const statItem = await prisma.statItem.update({
+      where: { id: itemId, stat_id: statId, user_id: session.user.id },
+      data: {
+        dateOfEntry: values.dateOfEntry,
+        numericValue: values.numericValue,
+        note: values.note
+      }
+    });
+    return responseWithItems(false, "Stat item updated successfully!", [
+      statItem
+    ]);
+  } catch (error) {
+    console.error("Error updating stat item:", error);
+    return responseWithItems(true, "Error updating stat item!", []);
+  }
+};
+
+export const deleteStatItem = async (statId: string, itemId: string) => {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return responseWithItems(true, "Unauthorized", []);
+  }
+
+  try {
+    await prisma.statItem.delete({
+      where: { id: itemId, stat_id: statId, user_id: session.user.id }
+    });
+    return responseWithItems(false, "Stat item deleted successfully!", []);
+  } catch (error) {
+    console.error("Error deleting stat item:", error);
+    return responseWithItems(true, "Error deleting stat item!", []);
   }
 };

@@ -50,6 +50,6 @@ model StatItem {
   dateCreated  DateTime  @default(now())
   dateModified DateTime?
 
-  stat Stat @relation("StatItems", fields: [stat_id], references: [id])
+  stat Stat @relation("StatItems", fields: [stat_id], references: [id], onDelete: Cascade)
   user User @relation("UserStatItems", fields: [user_id], references: [id])
 }

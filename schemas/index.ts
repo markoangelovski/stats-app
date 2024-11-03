@@ -25,3 +25,12 @@ export const StatSchema = z.object({
     .min(1, { message: "Minimum 1 character required!" })
     .max(50, { message: "Maximum 50 characters allowed!" })
 });
+
+export const StatItemSchema = z.object({
+  dateOfEntry: z.date(),
+  numericValue: z
+    .number()
+    .min(0, { message: "Minimum 0 value allowed!" })
+    .max(1000, { message: "Maximum 1000 value allowed!" }),
+  note: z.string().max(1000, { message: "Maximum 1000 characters allowed!" })
+});
