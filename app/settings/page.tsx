@@ -29,16 +29,30 @@ import {
   FormLabel,
   FormMessage
 } from "@/components/ui/form";
-import { getStats, newStat, deleteStat, updateStat, Stat } from "@/actions";
+import {
+  getStats,
+  newStat,
+  deleteStat,
+  updateStat,
+  Stat,
+  getUser,
+  Resp
+} from "@/actions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-
 export default function SettingsPage() {
   const [username, setUsername] = useState("");
   const [stats, setStats] = useState<Stat[]>([]);
   const [editingStatId, setEditingStatId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [isStatsPending, setIsStatsPending] = useState(true);
+  const [user, setUser] = useState<{
+    id: string;
+    username: string;
+    email: string;
+  } | null>(null);
+  const [userLoading, setUserLoading] = useState(true);
+  const [userError, setUserError] = useState(false);
   const { toast } = useToast();
 
   const newStatForm = useForm<z.infer<typeof StatSchema>>({
@@ -139,13 +153,72 @@ export default function SettingsPage() {
     }
   };
 
+  const fetchUser = async () => {
+    setUserLoading(true);
+    try {
+      const result = await getUser();
+      if (result.hasErrors) {
+        toast({ variant: "destructive", title: result.message });
+        setUserError(true);
+        setUser(null);
+      } else {
+        // TODO: Fix this
+        // @ts-expect-error - Type 'null' is not assignable to type 'User'.
+        setUser(result.data);
+        setUserError(false);
+      }
+    } catch (error) {
+      toast({ title: "Failed to fetch user", variant: "destructive" });
+      setUserError(true);
+      setUser(null);
+    } finally {
+      setUserLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchStats();
+    fetchUser();
   }, []);
 
   return (
     <div className="container mx-auto p-4 space-y-8">
       <h1 className="text-3xl font-bold">Settings</h1>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>User details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {userLoading ? (
+            <Skeleton className="h-20 w-full" />
+          ) : userError ? (
+            <p>Error loading user details.</p>
+          ) : (
+            <>
+              {user && (
+                <>
+                  <p>Username: {user.username}</p>
+                  <p>Email: {user.email}</p>
+                  <p>ID: {user.id}</p>
+                </>
+              )}
+            </>
+          )}
+          <form onSubmit={handleUsernameSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="username">New Username</Label>
+              <Input
+                id="username"
+                value={username}
+                onChange={handleUsernameChange}
+              />
+            </div>
+            <Button type="submit">Update Username</Button>
+          </form>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Create a new Stat</CardTitle>
@@ -304,6 +377,7 @@ export default function SettingsPage() {
                   <div>
                     <p>{stat.description}</p>
                     <p>Label: {stat.measurementLabel}</p>
+                    <p>ID: {stat.id}</p>
                     <div className="flex space-x-2 mt-4">
                       <Button onClick={() => handleEditStat(stat)}>Edit</Button>
                       <AlertDialog>
@@ -339,25 +413,6 @@ export default function SettingsPage() {
           ))}
         </>
       )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Update Username</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleUsernameSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="username">New Username</Label>
-              <Input
-                id="username"
-                value={username}
-                onChange={handleUsernameChange}
-              />
-            </div>
-            <Button type="submit">Update Username</Button>
-          </form>
-        </CardContent>
-      </Card>
     </div>
   );
 }

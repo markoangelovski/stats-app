@@ -51,6 +51,27 @@ const responseWithItems = <D>(
   };
 };
 
+export const getUser = async () => {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return responseWithItems(true, "Unauthorized", []);
+  }
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        id: true,
+        username: true,
+        email: true
+      }
+    });
+    return responseWithItems(false, "User fetched successfully!", user);
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    return responseWithItems(true, "Error fetching user!", null);
+  }
+};
+
 export const login = async (values: z.infer<typeof LoginSchema>) => {
   const validatedFields = LoginSchema.safeParse(values);
 
