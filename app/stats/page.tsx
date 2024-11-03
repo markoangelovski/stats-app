@@ -14,9 +14,16 @@ import {
 import StatCard from "./stats.components";
 import * as z from "zod";
 import { StatItemSchema } from "@/schemas";
+import { DateRange } from "react-day-picker";
 
 export default function StatsPage() {
+  const now = new Date();
+
   const [stats, setStats] = useState<StatWithItems[]>([]);
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: new Date(now.getFullYear(), now.getMonth(), 1),
+    to: new Date(now.getFullYear(), now.getMonth() + 1, 0)
+  });
   const { toast } = useToast();
 
   const handleNewItemSubmit = async (

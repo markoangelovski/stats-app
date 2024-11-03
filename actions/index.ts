@@ -3,6 +3,7 @@
 import bcryptjs from "bcryptjs";
 import { AuthError } from "next-auth";
 import * as z from "zod";
+import { DateRange } from "react-day-picker";
 
 import { signIn, auth } from "@/auth";
 import { prisma } from "@/lib/db";
@@ -14,6 +15,7 @@ import {
 } from "@/schemas";
 import { getUserByEmail } from "@/lib/utils";
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
+import { startOfMonth, endOfMonth } from "date-fns";
 
 export interface Resp<D> {
   hasErrors: boolean;
@@ -38,6 +40,8 @@ export interface StatItem {
   numericValue: number;
   note: string | null;
 }
+
+// export type DateRange = { start: Date; end: Date };
 
 const responseWithItems = <D>(
   hasErrors: boolean,
@@ -242,15 +246,16 @@ export const deleteStat = async (statId: string) => {
   }
 };
 
-export const getStatsWithItems = async () => {
+export const getStatsWithItems = async (
+  dateRange: DateRange = {
+    from: startOfMonth(new Date()),
+    to: endOfMonth(new Date())
+  }
+) => {
   const session = await auth();
   if (!session?.user?.id) {
     return responseWithItems(true, "Unauthorized", []);
   }
-
-  const now = new Date();
-  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
   try {
     const statsWithItems = await prisma.stat.findMany({
@@ -265,8 +270,8 @@ export const getStatsWithItems = async () => {
         statItems: {
           where: {
             dateOfEntry: {
-              gte: firstDayOfMonth,
-              lte: lastDayOfMonth
+              gte: dateRange.from,
+              lte: dateRange.to
             }
           },
           orderBy: {

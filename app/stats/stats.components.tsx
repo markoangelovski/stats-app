@@ -26,7 +26,7 @@ import {
   PopoverContent,
   PopoverTrigger
 } from "@/components/ui/popover";
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
   AlertDialog,
@@ -39,9 +39,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
-import { StatWithItems, StatItem } from "@/actions";
+import { StatWithItems, StatItem, getStatsWithItems } from "@/actions";
 import { StatItemSchema } from "@/schemas";
 import * as z from "zod";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { DateRange } from "react-day-picker";
 
 interface StatCardProps {
   stat: StatWithItems;
@@ -67,6 +69,7 @@ const StatCard = ({
   onEditItem,
   onDeleteItem
 }: StatCardProps) => {
+  const [currentStat, setCurrentStat] = useState<StatWithItems>(stat);
   const [newItemValue, setNewItemValue] = useState("");
   const [newItemNote, setNewItemNote] = useState("");
   const [newItemDate, setNewItemDate] = useState<Date>();
@@ -78,6 +81,10 @@ const StatCard = ({
     originalNote: string;
     originalDate: Date;
   } | null>(null);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: startOfMonth(new Date()),
+    to: endOfMonth(new Date())
+  });
 
   const handleNewItemSubmit = async () => {
     if (!newItemDate) return;
@@ -138,6 +145,13 @@ const StatCard = ({
     editingItem
   );
 
+  const handleUpdateStats = async () => {
+    const result = await getStatsWithItems(dateRange);
+    if (!result.hasErrors) {
+      setCurrentStat(result.data[0]);
+    }
+  };
+
   return (
     <Card key={stat.id} className="w-full">
       <CardHeader>
@@ -146,7 +160,7 @@ const StatCard = ({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2 max-h-60 overflow-y-auto">
-          {stat.statItems.map((item: StatItem) => (
+          {currentStat.statItems.map((item: StatItem) => (
             <div
               key={item.id}
               className={cn(
@@ -274,9 +288,14 @@ const StatCard = ({
           </div>
         </form>
 
+        <div className="flex space-x-2">
+          <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+          <Button onClick={handleUpdateStats}>Submit</Button>
+        </div>
+
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={stat.statItems}>
+            <LineChart data={currentStat.statItems}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
                 dataKey="dateOfEntry"
