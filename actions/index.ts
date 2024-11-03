@@ -10,6 +10,39 @@ import { LoginSchema, RegisterSchema, StatSchema } from "@/schemas";
 import { getUserByEmail } from "@/lib/utils";
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
 
+export interface Resp<D> {
+  hasErrors: boolean;
+  message: string;
+  data: D;
+}
+
+export interface StatWithItems {
+  id: string;
+  name: string;
+  description: string | null;
+  measurementLabel: string | null;
+  statItems: StatItem[];
+}
+
+export interface StatItem {
+  id: string;
+  dateOfEntry: Date;
+  numericValue: number;
+  note: string | null;
+}
+
+const responseWithItems = <D>(
+  hasErrors: boolean,
+  message: string,
+  data: D
+): Resp<D> => {
+  return {
+    hasErrors,
+    message,
+    data
+  };
+};
+
 export const login = async (values: z.infer<typeof LoginSchema>) => {
   const validatedFields = LoginSchema.safeParse(values);
 
@@ -109,7 +142,6 @@ export const newStat = async (values: z.infer<typeof StatSchema>) => {
 };
 
 export const getStats = async () => {
-  // TODO: Move authorization check to utils
   const session = await auth();
   if (!session?.user?.id) {
     return { message: "Unauthorized" };
@@ -170,5 +202,53 @@ export const deleteStat = async (statId: string) => {
   } catch (error) {
     console.error("Error deleting stat:", error);
     return { message: "Error deleting stat!" };
+  }
+};
+
+export const getStatsWithItems = async () => {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return responseWithItems(true, "Unauthorized", []);
+  }
+
+  const now = new Date();
+  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+  try {
+    const statsWithItems = await prisma.stat.findMany({
+      where: {
+        user_id: session.user.id
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        measurementLabel: true,
+        statItems: {
+          where: {
+            dateOfEntry: {
+              gte: firstDayOfMonth,
+              lte: lastDayOfMonth
+            }
+          },
+          select: {
+            id: true,
+            dateOfEntry: true,
+            numericValue: true,
+            note: true
+          }
+        }
+      }
+    });
+    console.log("statsWithItems: ", statsWithItems);
+    return responseWithItems(
+      false,
+      "Stats fetched successfully!",
+      statsWithItems
+    );
+  } catch (error) {
+    console.error("Error fetching stats with items:", error);
+    return responseWithItems(true, "Error fetching stats with items!", []);
   }
 };

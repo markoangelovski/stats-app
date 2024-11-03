@@ -41,12 +41,14 @@ model Stat {
 }
 
 model StatItem {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   stat_id      String
   user_id      String
   dateOfEntry  DateTime
   numericValue Float
-  note         String?  @db.VarChar(100)
+  note         String?   @db.VarChar(100)
+  dateCreated  DateTime  @default(now())
+  dateModified DateTime?
 
   stat Stat @relation("StatItems", fields: [stat_id], references: [id])
   user User @relation("UserStatItems", fields: [user_id], references: [id])
