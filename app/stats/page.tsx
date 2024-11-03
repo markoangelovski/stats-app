@@ -119,7 +119,7 @@ export default function StatsPage() {
         toast({ variant: "destructive", title: response.message });
       } else {
         setStats((prevStats) => [...prevStats, ...response.data]);
-        toast({ title: response.message });
+        // toast({ title: response.message });
       }
     })();
   }, [toast]);
