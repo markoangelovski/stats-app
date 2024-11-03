@@ -246,12 +246,7 @@ export const deleteStat = async (statId: string) => {
   }
 };
 
-export const getStatsWithItems = async (
-  dateRange: DateRange = {
-    from: startOfMonth(new Date()),
-    to: endOfMonth(new Date())
-  }
-) => {
+export const getStatsWithItems = async () => {
   const session = await auth();
   if (!session?.user?.id) {
     return responseWithItems(true, "Unauthorized", []);
@@ -270,8 +265,8 @@ export const getStatsWithItems = async (
         statItems: {
           where: {
             dateOfEntry: {
-              gte: dateRange.from,
-              lte: dateRange.to
+              gte: startOfMonth(new Date()),
+              lte: endOfMonth(new Date())
             }
           },
           orderBy: {
@@ -294,6 +289,46 @@ export const getStatsWithItems = async (
     );
   } catch (error) {
     console.error("Error fetching stats with items:", error);
+    return responseWithItems(true, "Error fetching stats with items!", []);
+  }
+};
+
+export const getItems = async (
+  statId: string,
+  dateRange: DateRange = {
+    from: startOfMonth(new Date()),
+    to: endOfMonth(new Date())
+  }
+) => {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return responseWithItems(true, "Unauthorized", []);
+  }
+
+  try {
+    const items = await prisma.statItem.findMany({
+      where: {
+        user_id: session.user.id,
+        stat_id: statId,
+        dateOfEntry: {
+          gte: dateRange.from,
+          lte: dateRange.to
+        }
+      },
+      orderBy: {
+        dateOfEntry: "asc"
+      },
+      select: {
+        id: true,
+        dateOfEntry: true,
+        numericValue: true,
+        note: true
+      }
+    });
+
+    return responseWithItems(false, "Stat items fetched successfully!", items);
+  } catch (error) {
+    console.error("Error fetching stat items:", error);
     return responseWithItems(true, "Error fetching stats with items!", []);
   }
 };

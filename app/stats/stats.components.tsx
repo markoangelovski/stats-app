@@ -39,7 +39,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
-import { StatWithItems, StatItem, getStatsWithItems } from "@/actions";
+import { StatWithItems, StatItem, getItems } from "@/actions";
 import { StatItemSchema } from "@/schemas";
 import * as z from "zod";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
@@ -69,7 +69,7 @@ const StatCard = ({
   onEditItem,
   onDeleteItem
 }: StatCardProps) => {
-  const [currentStat, setCurrentStat] = useState<StatWithItems>(stat);
+  const [items, setItems] = useState<StatItem[]>(stat.statItems);
   const [newItemValue, setNewItemValue] = useState("");
   const [newItemNote, setNewItemNote] = useState("");
   const [newItemDate, setNewItemDate] = useState<Date>();
@@ -145,11 +145,11 @@ const StatCard = ({
     editingItem
   );
 
-  const handleUpdateStats = async () => {
-    const result = await getStatsWithItems(dateRange);
-    console.log("handleUpdateStats result: ", result);
+  const handleGetItems = async () => {
+    const result = await getItems(stat.id, dateRange);
+    console.log("handleGetItems result: ", result);
     if (!result.hasErrors) {
-      setCurrentStat(result.data[0]);
+      setItems(result.data);
     }
   };
 
@@ -161,7 +161,7 @@ const StatCard = ({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2 max-h-60 overflow-y-auto">
-          {currentStat.statItems.map((item: StatItem) => (
+          {items.map((item: StatItem) => (
             <div
               key={item.id}
               className={cn(
@@ -291,12 +291,12 @@ const StatCard = ({
 
         <div className="flex space-x-2">
           <DatePickerWithRange date={dateRange} setDate={setDateRange} />
-          <Button onClick={handleUpdateStats}>Submit</Button>
+          <Button onClick={handleGetItems}>Submit</Button>
         </div>
 
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={currentStat.statItems}>
+            <LineChart data={items}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
                 dataKey="dateOfEntry"
