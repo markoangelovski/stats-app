@@ -306,7 +306,7 @@ const StatCard = ({
                 dataKey="dateOfEntry"
                 tickFormatter={(date) => format(new Date(date), "yyyy-MM-dd")}
               />
-              <YAxis />
+              <YAxis domain={["dataMin / 2", "auto"]} />
               <Tooltip />
               <Legend />
               <Line type="monotone" dataKey="numericValue" stroke="#8884d8" />
