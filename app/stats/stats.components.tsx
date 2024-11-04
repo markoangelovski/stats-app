@@ -96,6 +96,9 @@ const StatCard = ({
     };
 
     await onNewItemSubmit(stat.id, newItemData);
+
+    const result = await getItems(stat.id, dateRange);
+    setItems(result.data);
     resetForm();
   };
 
@@ -127,6 +130,7 @@ const StatCard = ({
 
   const handleDeleteItem = async (itemId: string) => {
     await onDeleteItem(stat.id, itemId);
+    setItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
     resetForm();
   };
 
@@ -147,7 +151,7 @@ const StatCard = ({
 
   const handleGetItems = async () => {
     const result = await getItems(stat.id, dateRange);
-    console.log("handleGetItems result: ", result);
+
     if (!result.hasErrors) {
       setItems(result.data);
     }

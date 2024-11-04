@@ -14,7 +14,6 @@ import {
 import StatCard from "./stats.components";
 import * as z from "zod";
 import { StatItemSchema } from "@/schemas";
-import { DateRange } from "react-day-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function StatsPage() {
