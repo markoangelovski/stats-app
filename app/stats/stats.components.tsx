@@ -85,6 +85,7 @@ const StatCard = ({
     from: startOfMonth(new Date()),
     to: endOfMonth(new Date())
   });
+  const [isLoading, setIsLoading] = useState(false); // Added loading state
 
   const handleNewItemSubmit = async () => {
     if (!newItemDate) return;
@@ -150,11 +151,13 @@ const StatCard = ({
   );
 
   const handleGetItems = async () => {
+    setIsLoading(true); // Set loading to true
     const result = await getItems(stat.id, dateRange);
 
     if (!result.hasErrors) {
       setItems(result.data);
     }
+    setIsLoading(false); // Set loading to false after fetching
   };
 
   return (
@@ -293,14 +296,22 @@ const StatCard = ({
           </div>
         </form>
 
-        <div className="flex space-x-2">
+        <div className="md:flex md:space-x-2 space-y-2 md:space-y-0">
           <DatePickerWithRange date={dateRange} setDate={setDateRange} />
-          <Button onClick={handleGetItems}>Submit</Button>
+          <Button onClick={handleGetItems} disabled={isLoading}>
+            {/* Added disabled prop */}
+            {isLoading ? "Fetching..." : "Submit"} {/* Changed label */}
+          </Button>
         </div>
 
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={items}>
+            <LineChart
+              data={items.map((item) => ({
+                ...item,
+                numericValue: item.numericValue ? item.numericValue : null
+              }))}
+            >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
                 dataKey="dateOfEntry"
@@ -309,7 +320,12 @@ const StatCard = ({
               <YAxis domain={["dataMin / 2", "auto"]} />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="numericValue" stroke="#8884d8" />
+              <Line
+                connectNulls
+                type="monotone"
+                dataKey="numericValue"
+                stroke="#8884d8"
+              />
             </LineChart>
           </ResponsiveContainer>
         </div>
