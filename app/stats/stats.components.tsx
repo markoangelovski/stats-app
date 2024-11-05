@@ -160,6 +160,18 @@ const StatCard = ({
     setIsLoading(false); // Set loading to false after fetching
   };
 
+  const numericValues = items.map((item) => item.numericValue);
+
+  const total = numericValues.length;
+  const sum = numericValues.reduce((sum, val) => sum + val, 0);
+  const min = Math.min(...numericValues);
+  const max = Math.max(...numericValues);
+  const avg = total > 0 ? sum / total : 0;
+
+  const formatTitle = (title: string) => {
+    return title.charAt(0).toUpperCase() + title.slice(1);
+  };
+
   return (
     <Card key={stat.id} className="w-full">
       <CardHeader>
@@ -296,11 +308,29 @@ const StatCard = ({
           </div>
         </form>
 
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4">
+          {["total", "min", "max", "avg"].map((label) => (
+            <Card key={label} className="w-full">
+              <CardHeader>
+                <CardTitle>{formatTitle(label)}:</CardTitle>
+              </CardHeader>
+              <CardContent className="text-2xl font-bold">
+                {label === "total"
+                  ? total
+                  : label === "min"
+                  ? min
+                  : label === "max"
+                  ? max
+                  : avg.toFixed(2)}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
         <div className="md:flex md:space-x-2 space-y-2 md:space-y-0">
           <DatePickerWithRange date={dateRange} setDate={setDateRange} />
           <Button onClick={handleGetItems} disabled={isLoading}>
-            {/* Added disabled prop */}
-            {isLoading ? "Fetching..." : "Submit"} {/* Changed label */}
+            {isLoading ? "Fetching..." : "Submit"}
           </Button>
         </div>
 
@@ -315,11 +345,17 @@ const StatCard = ({
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
                 dataKey="dateOfEntry"
-                tickFormatter={(date) => format(new Date(date), "yyyy-MM-dd")}
+                tickFormatter={(date) => format(new Date(date), "dd.MM.yy")}
               />
               <YAxis domain={["dataMin", "auto"]} />
-              <Tooltip />
-              <Legend />
+              <Tooltip
+                labelStyle={{ color: "black" }}
+                labelFormatter={(label) =>
+                  `Date: ${format(new Date(label), "dd.MM.yy")}`
+                }
+                formatter={(value) => [value, stat.measurementLabel]}
+              />
+              {/* <Legend  /> */}
               <Line
                 connectNulls
                 type="monotone"
