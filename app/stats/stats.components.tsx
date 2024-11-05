@@ -27,7 +27,7 @@ import {
   PopoverTrigger
 } from "@/components/ui/popover";
 import { format, startOfMonth, endOfMonth } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn, withTrend } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -69,7 +69,9 @@ const StatCard = ({
   onEditItem,
   onDeleteItem
 }: StatCardProps) => {
-  const [items, setItems] = useState<StatItem[]>(stat.statItems);
+  const [items, setItems] = useState<StatItem[]>(
+    withTrend(stat.statItems).data
+  );
   const [newItemValue, setNewItemValue] = useState("");
   const [newItemNote, setNewItemNote] = useState("");
   const [newItemDate, setNewItemDate] = useState<Date>();
@@ -155,7 +157,7 @@ const StatCard = ({
     const result = await getItems(stat.id, dateRange);
 
     if (!result.hasErrors) {
-      setItems(result.data);
+      setItems(withTrend(result.data).data);
     }
     setIsLoading(false); // Set loading to false after fetching
   };
@@ -164,13 +166,10 @@ const StatCard = ({
 
   const total = numericValues.length;
   const sum = numericValues.reduce((sum, val) => sum + val, 0);
-  const min = Math.min(...numericValues);
-  const max = Math.max(...numericValues);
+  const min = Math.min(...numericValues.filter((val) => val > 0));
+  const max = Math.max(...numericValues.filter((val) => val > 0));
   const avg = total > 0 ? sum / total : 0;
-
-  const formatTitle = (title: string) => {
-    return title.charAt(0).toUpperCase() + title.slice(1);
-  };
+  const { slope, intercept } = withTrend(items);
 
   return (
     <Card key={stat.id} className="w-full">
@@ -191,7 +190,7 @@ const StatCard = ({
               )}
             >
               <span className="w-1/4">
-                {format(item.dateOfEntry, "yyyy-MM-dd")}
+                {format(item.dateOfEntry, "dd.MM.yy")}
               </span>
               <span className="w-1/4 text-center font-bold">
                 {item.numericValue} {stat.measurementLabel}
@@ -309,19 +308,30 @@ const StatCard = ({
         </form>
 
         <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4">
-          {["total", "min", "max", "avg"].map((label) => (
+          {[
+            "Total",
+            "Min",
+            "Max",
+            "Avg",
+            "Slope (Trend)",
+            "Intercept (Trend)"
+          ].map((label) => (
             <Card key={label} className="w-full">
               <CardHeader>
-                <CardTitle>{formatTitle(label)}:</CardTitle>
+                <CardTitle>{label}:</CardTitle>
               </CardHeader>
               <CardContent className="text-2xl font-bold">
-                {label === "total"
+                {label === "Total"
                   ? total
-                  : label === "min"
+                  : label === "Min"
                   ? min
-                  : label === "max"
+                  : label === "Max"
                   ? max
-                  : avg.toFixed(2)}
+                  : label === "Avg"
+                  ? avg.toFixed(2)
+                  : label === "Slope (Trend)"
+                  ? slope
+                  : intercept}
               </CardContent>
             </Card>
           ))}
@@ -339,7 +349,7 @@ const StatCard = ({
             <LineChart
               data={items.map((item) => ({
                 ...item,
-                numericValue: item.numericValue ? item.numericValue : null
+                value: item.numericValue ? item.numericValue : null
               }))}
             >
               <CartesianGrid strokeDasharray="3 3" />
@@ -353,14 +363,23 @@ const StatCard = ({
                 labelFormatter={(label) =>
                   `Date: ${format(new Date(label), "dd.MM.yy")}`
                 }
-                formatter={(value) => [value, stat.measurementLabel]}
+                formatter={(value, name) => [
+                  `${value} ${stat.measurementLabel}`,
+                  name
+                ]}
               />
-              {/* <Legend  /> */}
+              <Legend />
               <Line
                 connectNulls
                 type="monotone"
-                dataKey="numericValue"
+                dataKey="value"
                 stroke="#8884d8"
+              />
+              <Line
+                connectNulls
+                type="monotone"
+                dataKey="trend"
+                stroke="#008000"
               />
             </LineChart>
           </ResponsiveContainer>

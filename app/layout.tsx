@@ -3,12 +3,49 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Header } from "@/components/header";
 import { Toaster } from "@/components/ui/toaster";
+import { Metadata } from "next";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata = {
-  title: "Stats.app - The Stats Tracker",
-  description: "Track your personal stats"
+const APP_NAME = "Stats.app - The Stats Tracker";
+const APP_DEFAULT_TITLE = "Stats.app";
+const APP_TITLE_TEMPLATE = "%s - Stats.app";
+const APP_DESCRIPTION = "Track your personal stats";
+
+export const metadata: Metadata = {
+  applicationName: APP_NAME,
+  title: {
+    default: APP_DEFAULT_TITLE,
+    template: APP_TITLE_TEMPLATE
+  },
+  description: APP_DESCRIPTION,
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: APP_DEFAULT_TITLE
+    // startUpImage: [],
+  },
+  formatDetection: {
+    telephone: false
+  },
+  openGraph: {
+    type: "website",
+    siteName: APP_NAME,
+    title: {
+      default: APP_DEFAULT_TITLE,
+      template: APP_TITLE_TEMPLATE
+    },
+    description: APP_DESCRIPTION
+  },
+  twitter: {
+    card: "summary",
+    title: {
+      default: APP_DEFAULT_TITLE,
+      template: APP_TITLE_TEMPLATE
+    },
+    description: APP_DESCRIPTION
+  }
 };
 
 export default function RootLayout({
