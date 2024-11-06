@@ -349,7 +349,7 @@ const StatCard = ({
                   : label === "Max"
                   ? max
                   : label === "Avg"
-                  ? avg.toFixed(2)
+                  ? parseFloat(avg.toFixed(2))
                   : label === "Slope (Trend)"
                   ? slope
                   : label === "Intercept (Trend)"
