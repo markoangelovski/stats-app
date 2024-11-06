@@ -146,6 +146,8 @@ const StatCard = ({
         note: newItemNote
       };
       await onEditItem(stat.id, itemId, updatedData);
+      const result = await getItems(stat.id, dateRange);
+      setItems(withTrend(result.data).data);
       resetForm();
     }
   };
@@ -328,6 +330,15 @@ const StatCard = ({
           <div className="flex space-x-2">
             <Button type="submit" disabled={isButtonDisabled}>
               {editingItem ? "Edit" : "Add"}
+            </Button>
+
+            <Button
+              type="button"
+              disabled={isButtonDisabled}
+              variant="destructive"
+              onClick={resetForm}
+            >
+              Cancel
             </Button>
           </div>
         </form>
