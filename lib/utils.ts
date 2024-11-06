@@ -64,9 +64,9 @@ export const withTrend = (items: StatItem[]) => {
   }
 
   // Calculate mode
-  let modes = [],
-    frequency: { [key: number]: number } = {},
-    maxFreq = 0;
+  const modes = [],
+    frequency: { [key: number]: number } = {};
+  let maxFreq = 0;
   sortedData.forEach((item) => {
     frequency[item] = (frequency[item] || 0) + 1;
     maxFreq = Math.max(maxFreq, frequency[item]);
