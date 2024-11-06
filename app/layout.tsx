@@ -3,7 +3,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Header } from "@/components/header";
 import { Toaster } from "@/components/ui/toaster";
-import { Metadata } from "next";
+import { Metadata, Viewport } from "next";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -46,6 +46,10 @@ export const metadata: Metadata = {
     },
     description: APP_DESCRIPTION
   }
+};
+
+export const viewport: Viewport = {
+  themeColor: "#000"
 };
 
 export default function RootLayout({
