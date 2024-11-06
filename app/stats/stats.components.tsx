@@ -52,6 +52,12 @@ import * as z from "zod";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
 import { Switch } from "@/components/ui/switch";
+import {
+  Tooltip as SCNTooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/components/ui/tooltip";
 
 interface StatCardProps {
   stat: StatWithItems;
@@ -188,7 +194,7 @@ const StatCard = ({
   const max = Math.max(...numericValues.filter((val) => val > 0));
   const avg = total > 0 ? sum / totalPositives : 0;
   // const avg = total > 0 ? sum / total : 0;
-  const { slope, intercept, median, modes } = withTrend(items);
+  const { slope, intercept, median, avgMode, modes } = withTrend(items);
 
   return (
     <Card key={stat.id} className="w-full">
@@ -335,28 +341,37 @@ const StatCard = ({
             "Slope (Trend)",
             "Intercept (Trend)",
             "Median",
-            "Mode"
+            "Mode (avg)"
           ].map((label) => (
             <Card key={label} className="w-full">
               <CardHeader>
                 <CardTitle>{label}:</CardTitle>
               </CardHeader>
               <CardContent className="text-2xl font-bold">
-                {label === "Total"
-                  ? total
-                  : label === "Min"
-                  ? min
-                  : label === "Max"
-                  ? max
-                  : label === "Avg"
-                  ? parseFloat(avg.toFixed(2))
-                  : label === "Slope (Trend)"
-                  ? slope
-                  : label === "Intercept (Trend)"
-                  ? intercept
-                  : label === "Median"
-                  ? median
-                  : modes.join(", ")}
+                {label === "Total" ? (
+                  total
+                ) : label === "Min" ? (
+                  min
+                ) : label === "Max" ? (
+                  max
+                ) : label === "Avg" ? (
+                  parseFloat(avg.toFixed(2))
+                ) : label === "Slope (Trend)" ? (
+                  slope
+                ) : label === "Intercept (Trend)" ? (
+                  intercept
+                ) : label === "Median" ? (
+                  median
+                ) : (
+                  <TooltipProvider>
+                    <SCNTooltip>
+                      <TooltipTrigger>{avgMode}</TooltipTrigger>
+                      <TooltipContent>
+                        <p>{modes.join(", ")}</p>
+                      </TooltipContent>
+                    </SCNTooltip>
+                  </TooltipProvider>
+                )}
               </CardContent>
             </Card>
           ))}

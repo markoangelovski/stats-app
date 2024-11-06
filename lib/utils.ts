@@ -19,6 +19,7 @@ export const withTrend = (items: StatItem[]) => {
       slope: 0,
       intercept: 0,
       median: 0,
+      avgMode: 0,
       modes: [],
       data: []
     };
@@ -77,11 +78,18 @@ export const withTrend = (items: StatItem[]) => {
     }
   }
 
+  const totalPositives = modes.reduce(
+    (acc, val) => (val > 0 ? acc + 1 : acc),
+    0
+  );
+  const sum = modes.reduce((sum, val) => sum + val, 0);
+
   // Calculate trend values for each point in the dataset
   return {
     slope: parseFloat(slope.toFixed(2)),
     intercept: parseFloat(intercept.toFixed(2)),
-    median: parseFloat(median.toFixed(2)),
+    median: parseFloat(median?.toFixed(2)),
+    avgMode: parseFloat((sum / totalPositives).toFixed(2)),
     modes: modes.sort(),
     data: dataWithX.map((point) => ({
       ...point,
