@@ -124,9 +124,9 @@ const StatCard = ({
     resetForm();
   };
 
-  const handleEditItem = async (itemId: string) => {
-    if (!editingItem || editingItem.itemId !== itemId) {
-      const item = stat.statItems.find((i) => i.id === itemId);
+  const handleEditItem = async (itemId: string, editBtn: boolean = false) => {
+    if (!editingItem || editingItem.itemId !== itemId || editBtn) {
+      const item = items.find((i) => i.id === itemId);
       if (item) {
         setNewItemValue(item.numericValue.toString());
         setNewItemNote(item.note || "");
@@ -229,7 +229,7 @@ const StatCard = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleEditItem(item.id)}
+                  onClick={() => handleEditItem(item.id, true)}
                 >
                   <Edit className="h-4 w-4" />
                 </Button>
