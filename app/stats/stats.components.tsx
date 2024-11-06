@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { ChangeEvent, FormEvent, useState } from "react";
 import {
   Card,
   CardContent,
@@ -19,7 +19,14 @@ import {
   Legend,
   ResponsiveContainer
 } from "recharts";
-import { Calendar as CalendarIcon, Edit, Trash2 } from "lucide-react";
+import {
+  Calendar as CalendarIcon,
+  Edit,
+  EllipsisVertical,
+  LogOut,
+  Settings,
+  Trash2
+} from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -44,6 +51,7 @@ import { StatItemSchema } from "@/schemas";
 import * as z from "zod";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
+import { Switch } from "@/components/ui/switch";
 
 interface StatCardProps {
   stat: StatWithItems;
@@ -63,7 +71,7 @@ interface StatCardProps {
   onDeleteItem: (statId: string, itemId: string) => Promise<void>;
 }
 
-interface StatItemWithTrend extends StatItem {
+export interface StatItemWithTrend extends StatItem {
   trend: number;
 }
 
@@ -92,6 +100,8 @@ const StatCard = ({
     to: endOfMonth(new Date())
   });
   const [isLoading, setIsLoading] = useState(false); // Added loading state
+  const [isTrend, setIsTrend] = useState(false); // Added loading state
+  console.log("isTrend: ", isTrend);
 
   const handleNewItemSubmit = async () => {
     if (!newItemDate) return;
@@ -343,11 +353,23 @@ const StatCard = ({
 
         <div className="md:flex md:space-x-2 space-y-2 md:space-y-0">
           <DatePickerWithRange date={dateRange} setDate={setDateRange} />
-          <Button onClick={handleGetItems} disabled={isLoading}>
-            {isLoading ? "Fetching..." : "Submit"}
-          </Button>
-        </div>
+          <div className="flex space-x-2 justify-between w-full">
+            <Button onClick={handleGetItems} disabled={isLoading}>
+              {isLoading ? "Fetching..." : "Submit"}
+            </Button>
 
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="trend"
+                checked={isTrend}
+                onCheckedChange={() => setIsTrend(!isTrend)}
+              />
+              <Label htmlFor="trend" className="cursor-pointer">
+                Display Trend
+              </Label>
+            </div>
+          </div>
+        </div>
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
@@ -362,7 +384,7 @@ const StatCard = ({
                 dataKey="dateOfEntry"
                 tickFormatter={(date) => format(new Date(date), "dd.MM.yy")}
               />
-              <YAxis domain={["dataMin", "auto"]} />
+              <YAxis domain={["auto"]} />
               <Tooltip
                 labelStyle={{ color: "black" }}
                 labelFormatter={(label) =>
@@ -380,12 +402,14 @@ const StatCard = ({
                 dataKey="value"
                 stroke="#8884d8"
               />
-              <Line
-                connectNulls
-                type="monotone"
-                dataKey="trend"
-                stroke="#008000"
-              />
+              {isTrend && (
+                <Line
+                  connectNulls
+                  type="monotone"
+                  dataKey="trend"
+                  stroke="#008000"
+                />
+              )}
             </LineChart>
           </ResponsiveContainer>
         </div>

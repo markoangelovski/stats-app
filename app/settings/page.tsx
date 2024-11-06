@@ -40,6 +40,7 @@ import {
 } from "@/actions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+
 export default function SettingsPage() {
   const [username, setUsername] = useState("");
   const [stats, setStats] = useState<Stat[]>([]);
@@ -183,7 +184,7 @@ export default function SettingsPage() {
 
   return (
     <div className="container mx-auto p-4 space-y-8">
-      <h1 className="text-3xl font-bold">Settings</h1>
+      {/* <h1 className="text-3xl font-bold">Settings</h1> */}
 
       <Card>
         <CardHeader>
