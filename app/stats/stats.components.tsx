@@ -34,7 +34,7 @@ import {
   PopoverTrigger
 } from "@/components/ui/popover";
 import { format, startOfMonth, endOfMonth } from "date-fns";
-import { cn, withTrend } from "@/lib/utils";
+import { capitalize, cn, withTrend } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -107,7 +107,6 @@ const StatCard = ({
   });
   const [isLoading, setIsLoading] = useState(false); // Added loading state
   const [isTrend, setIsTrend] = useState(false); // Added loading state
-  console.log("isTrend: ", isTrend);
 
   const handleNewItemSubmit = async () => {
     if (!newItemDate) return;
@@ -193,8 +192,9 @@ const StatCard = ({
   const min = Math.min(...numericValues.filter((val) => val > 0));
   const max = Math.max(...numericValues.filter((val) => val > 0));
   const avg = total > 0 ? sum / totalPositives : 0;
-  // const avg = total > 0 ? sum / total : 0;
   const { slope, intercept, median, avgMode, modes } = withTrend(items);
+
+  // Capitalize the first letter of a string
 
   return (
     <Card key={stat.id} className="w-full">
@@ -421,7 +421,12 @@ const StatCard = ({
                   name
                 ]}
               />
-              <Legend />
+
+              <Legend
+                formatter={(value) =>
+                  value === "value" ? stat.name : capitalize(value)
+                }
+              />
               <Line
                 connectNulls
                 type="monotone"
