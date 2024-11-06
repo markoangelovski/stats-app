@@ -179,11 +179,16 @@ const StatCard = ({
   const numericValues = items.map((item) => item.numericValue);
 
   const total = numericValues.length;
+  const totalPositives = numericValues.reduce(
+    (acc, val) => (val > 0 ? acc + 1 : acc),
+    0
+  );
   const sum = numericValues.reduce((sum, val) => sum + val, 0);
   const min = Math.min(...numericValues.filter((val) => val > 0));
   const max = Math.max(...numericValues.filter((val) => val > 0));
-  const avg = total > 0 ? sum / total : 0;
-  const { slope, intercept } = withTrend(items);
+  const avg = total > 0 ? sum / totalPositives : 0;
+  // const avg = total > 0 ? sum / total : 0;
+  const { slope, intercept, median, modes } = withTrend(items);
 
   return (
     <Card key={stat.id} className="w-full">
@@ -328,7 +333,9 @@ const StatCard = ({
             "Max",
             "Avg",
             "Slope (Trend)",
-            "Intercept (Trend)"
+            "Intercept (Trend)",
+            "Median",
+            "Mode"
           ].map((label) => (
             <Card key={label} className="w-full">
               <CardHeader>
@@ -345,7 +352,11 @@ const StatCard = ({
                   ? avg.toFixed(2)
                   : label === "Slope (Trend)"
                   ? slope
-                  : intercept}
+                  : label === "Intercept (Trend)"
+                  ? intercept
+                  : label === "Median"
+                  ? median
+                  : modes.join(", ")}
               </CardContent>
             </Card>
           ))}

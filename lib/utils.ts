@@ -18,6 +18,8 @@ export const withTrend = (items: StatItem[]) => {
     return {
       slope: 0,
       intercept: 0,
+      median: 0,
+      modes: [],
       data: []
     };
   }
@@ -50,10 +52,37 @@ export const withTrend = (items: StatItem[]) => {
   // Function to predict y (value) for any x (date in days since start)
   const predict = (x: number) => slope * x + intercept;
 
+  // Calculate median
+  let median = 0;
+  const sortedData = items.map((item) => item.numericValue).sort();
+  const middleIndex1 = Math.floor(sortedData.length / 2) - 1;
+  const middleIndex2 = Math.floor(sortedData.length / 2);
+  if (sortedData.length % 2 === 0) {
+    median = (sortedData[middleIndex1] + sortedData[middleIndex2]) / 2;
+  } else {
+    median = sortedData[middleIndex1];
+  }
+
+  // Calculate mode
+  let modes = [],
+    frequency: { [key: number]: number } = {},
+    maxFreq = 0;
+  sortedData.forEach((item) => {
+    frequency[item] = (frequency[item] || 0) + 1;
+    maxFreq = Math.max(maxFreq, frequency[item]);
+  });
+  for (const value in frequency) {
+    if (frequency[value] === maxFreq) {
+      modes.push(Number(value));
+    }
+  }
+
   // Calculate trend values for each point in the dataset
   return {
     slope: parseFloat(slope.toFixed(2)),
     intercept: parseFloat(intercept.toFixed(2)),
+    median: parseFloat(median.toFixed(2)),
+    modes: modes.sort(),
     data: dataWithX.map((point) => ({
       ...point,
       trend: parseFloat(predict(point.x).toFixed(2))
