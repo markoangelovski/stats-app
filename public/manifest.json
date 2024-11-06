@@ -2,7 +2,7 @@
   "name": "Stats.app",
   "short_name": "Stats.app",
   "theme_color": "#000",
-  "background_color": "#fff",
+  "background_color": "#000",
   "display": "standalone",
   "orientation": "portrait",
   "scope": "/",
