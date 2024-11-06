@@ -24,7 +24,7 @@ export const withTrend = (items: StatItem[]) => {
 
   // Convert date to a numeric value (days since first date)
   const startDate = new Date(items[0].dateOfEntry);
-  const dataWithX = items.map((point, index) => {
+  const dataWithX = items.map((point) => {
     const daysSinceStart =
       (new Date(point.dateOfEntry).getTime() - startDate.getTime()) /
       (1000 * 60 * 60 * 24);
@@ -52,11 +52,11 @@ export const withTrend = (items: StatItem[]) => {
 
   // Calculate trend values for each point in the dataset
   return {
-    slope: slope.toFixed(2),
-    intercept: intercept.toFixed(2),
+    slope: parseFloat(slope.toFixed(2)),
+    intercept: parseFloat(intercept.toFixed(2)),
     data: dataWithX.map((point) => ({
       ...point,
-      trend: predict(point.x).toFixed(2)
+      trend: parseFloat(predict(point.x).toFixed(2))
     }))
   };
 };

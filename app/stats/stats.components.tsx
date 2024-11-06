@@ -63,13 +63,17 @@ interface StatCardProps {
   onDeleteItem: (statId: string, itemId: string) => Promise<void>;
 }
 
+interface StatItemWithTrend extends StatItem {
+  trend: number;
+}
+
 const StatCard = ({
   stat,
   onNewItemSubmit,
   onEditItem,
   onDeleteItem
 }: StatCardProps) => {
-  const [items, setItems] = useState<StatItem[]>(
+  const [items, setItems] = useState<StatItemWithTrend[]>(
     withTrend(stat.statItems).data
   );
   const [newItemValue, setNewItemValue] = useState("");
@@ -101,7 +105,7 @@ const StatCard = ({
     await onNewItemSubmit(stat.id, newItemData);
 
     const result = await getItems(stat.id, dateRange);
-    setItems(result.data);
+    setItems(withTrend(result.data).data);
     resetForm();
   };
 
@@ -157,7 +161,7 @@ const StatCard = ({
     const result = await getItems(stat.id, dateRange);
 
     if (!result.hasErrors) {
-      setItems(withTrend(result.data).data);
+      setItems(withTrend(result.data).data as StatItemWithTrend[]);
     }
     setIsLoading(false); // Set loading to false after fetching
   };
@@ -349,7 +353,8 @@ const StatCard = ({
             <LineChart
               data={items.map((item) => ({
                 ...item,
-                value: item.numericValue ? item.numericValue : null
+                value: item.numericValue ? item.numericValue : null,
+                trend: item.numericValue ? item.trend : null
               }))}
             >
               <CartesianGrid strokeDasharray="3 3" />
