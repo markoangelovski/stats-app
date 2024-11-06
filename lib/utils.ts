@@ -55,7 +55,10 @@ export const withTrend = (items: StatItem[]) => {
 
   // Calculate median
   let median = 0;
-  const sortedData = items.map((item) => item.numericValue).sort();
+  const sortedData = items
+    .map((item) => item.numericValue)
+    .sort()
+    .filter((item) => item > 0);
   const middleIndex1 = Math.floor(sortedData.length / 2) - 1;
   const middleIndex2 = Math.floor(sortedData.length / 2);
   if (sortedData.length % 2 === 0) {
