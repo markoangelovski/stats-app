@@ -429,7 +429,7 @@ const StatCard = ({
                 }
                 formatter={(value, name) => [
                   `${value} ${stat.measurementLabel}`,
-                  name
+                  `${name === "value" ? stat.name : capitalize(name as string)}`
                 ]}
               />
 

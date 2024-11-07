@@ -25,9 +25,12 @@ export const withTrend = (items: StatItem[]) => {
     };
   }
 
+  // Calculate trend only with items where numericValue > 0
+  const positiveItems = items.filter((item) => item.numericValue > 0);
+
   // Convert date to a numeric value (days since first date)
-  const startDate = new Date(items[0].dateOfEntry);
-  const dataWithX = items.map((point) => {
+  const startDate = new Date(positiveItems[0].dateOfEntry);
+  const dataWithX = positiveItems.map((point) => {
     const daysSinceStart =
       (new Date(point.dateOfEntry).getTime() - startDate.getTime()) /
       (1000 * 60 * 60 * 24);
@@ -55,10 +58,7 @@ export const withTrend = (items: StatItem[]) => {
 
   // Calculate median
   let median = 0;
-  const sortedData = items
-    .map((item) => item.numericValue)
-    .sort()
-    .filter((item) => item > 0);
+  const sortedData = positiveItems.map((item) => item.numericValue).sort();
   const middleIndex1 = Math.floor(sortedData.length / 2) - 1;
   const middleIndex2 = Math.floor(sortedData.length / 2);
   if (sortedData.length % 2 === 0) {
@@ -87,16 +87,24 @@ export const withTrend = (items: StatItem[]) => {
   );
   const sum = modes.reduce((sum, val) => sum + val, 0);
 
-  // Calculate trend values for each point in the dataset
+  // Calculate trend values for each point in the dataset where numericValue > 0
+  const trendMap: { [key: string]: number } = {};
+  dataWithX.forEach((item) => {
+    trendMap[item.dateOfEntry.toDateString()] = parseFloat(
+      predict(item.x).toFixed(2)
+    );
+  });
+
   return {
     slope: parseFloat(slope.toFixed(2)),
     intercept: parseFloat(intercept.toFixed(2)),
     median: parseFloat(median?.toFixed(2)),
     avgMode: parseFloat((sum / totalPositives).toFixed(2)),
     modes: modes.sort(),
-    data: dataWithX.map((point) => ({
-      ...point,
-      trend: parseFloat(predict(point.x).toFixed(2))
+    data: items.map((item) => ({
+      ...item,
+      // Add trend value to each item in the dataset where numericValue > 0
+      trend: trendMap[item.dateOfEntry.toDateString()]
     }))
   };
 };
