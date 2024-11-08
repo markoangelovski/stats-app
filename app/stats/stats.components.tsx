@@ -109,21 +109,27 @@ const StatCard = ({
   const [isTrend, setIsTrend] = useState(false); // Added loading state
   const [isSubmitting, setIsSubmitting] = useState(false); // Added submitting state
 
-
   const handleNewItemSubmit = async () => {
     if (!newItemDate) return;
+    setIsSubmitting(true); // Set loading state to true before submitting
+    try {
+      const newItemData = {
+        dateOfEntry: newItemDate,
+        numericValue: parseFloat(newItemValue.replace(",", ".")),
+        note: newItemNote
+      };
 
-    const newItemData = {
-      dateOfEntry: newItemDate,
-      numericValue: parseFloat(newItemValue.replace(",", ".")),
-      note: newItemNote
-    };
+      await onNewItemSubmit(stat.id, newItemData);
 
-    await onNewItemSubmit(stat.id, newItemData);
-
-    const result = await getItems(stat.id, dateRange);
-    setItems(withTrend(result.data).data);
-    resetForm();
+      const result = await getItems(stat.id, dateRange);
+      setItems(withTrend(result.data).data);
+      resetForm();
+    } catch (error) {
+      // Handle errors appropriately, e.g., display an error message
+      console.error("Error editing item:", error);
+    } finally {
+      setIsSubmitting(false); // Set loading state to false after submitting
+    }
   };
 
   const handleEditItem = async (itemId: string, editBtn: boolean = false) => {
@@ -176,12 +182,9 @@ const StatCard = ({
     setIsPopoverOpen(false);
   };
 
-  const isButtonDisabled = !(
-    newItemValue ||
-    newItemNote ||
-    newItemDate ||
-    editingItem
-  ) || isSubmitting;
+  const isButtonDisabled =
+    !(newItemValue || newItemNote || newItemDate || editingItem) ||
+    isSubmitting;
 
   const handleGetItems = async () => {
     setIsLoading(true); // Set loading to true
@@ -339,7 +342,7 @@ const StatCard = ({
           </div>
           <div className="flex space-x-2">
             <Button type="submit" disabled={isButtonDisabled}>
-              {isSubmitting ? "Saving..." : (editingItem ? "Edit" : "Add")}
+              {isSubmitting ? "Saving..." : editingItem ? "Edit" : "Add"}
             </Button>
 
             <Button
