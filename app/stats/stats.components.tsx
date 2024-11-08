@@ -19,14 +19,7 @@ import {
   Legend,
   ResponsiveContainer
 } from "recharts";
-import {
-  Calendar as CalendarIcon,
-  Edit,
-  EllipsisVertical,
-  LogOut,
-  Settings,
-  Trash2
-} from "lucide-react";
+import { Calendar as CalendarIcon, Edit, Trash2 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -212,7 +205,7 @@ const StatCard = ({
   // Capitalize the first letter of a string
 
   return (
-    <Card key={stat.id} className="w-full">
+    <Card key={stat.id} id={stat.id} className="w-full">
       <CardHeader>
         <CardTitle>{stat.name}</CardTitle>
         <CardDescription>{stat.description}</CardDescription>

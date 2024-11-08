@@ -19,15 +19,10 @@ import {
 export function Header() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [popoverOpen, setPopoverOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  const handleLinkClick = () => {
-    setPopoverOpen(false);
-  };
 
   return (
     <header className="p-4 border-b">

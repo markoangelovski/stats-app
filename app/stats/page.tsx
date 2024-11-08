@@ -15,6 +15,7 @@ import StatCard from "./stats.components";
 import * as z from "zod";
 import { StatItemSchema } from "@/schemas";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function StatsPage() {
   const [stats, setStats] = useState<StatWithItems[]>([]);
@@ -133,21 +134,32 @@ export default function StatsPage() {
       {/* <h1 className="text-3xl font-bold">Stats</h1> */}
       {isLoading ? (
         <>
-          <Skeleton className="h-96 w-full" />
+          <Skeleton className="h-10 w-full" />
           <Skeleton className="h-96 w-full" />
           <Skeleton className="h-96 w-full" />
           <Skeleton className="h-96 w-full" />
         </>
       ) : (
-        stats.map((stat) => (
-          <StatCard
-            key={stat.id}
-            stat={stat}
-            onNewItemSubmit={handleNewItemSubmit}
-            onEditItem={handleEditItem}
-            onDeleteItem={handleDeleteItem}
-          />
-        ))
+        <Tabs defaultValue={stats[0].id} className="">
+          <TabsList className="flex flex-wrap gap-2">
+            {stats.map((stat) => (
+              <TabsTrigger value={stat.id} className="flex-grow">
+                {stat.name}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {stats.map((stat) => (
+            <TabsContent value={stat.id}>
+              <StatCard
+                key={stat.id}
+                stat={stat}
+                onNewItemSubmit={handleNewItemSubmit}
+                onEditItem={handleEditItem}
+                onDeleteItem={handleDeleteItem}
+              />
+            </TabsContent>
+          ))}
+        </Tabs>
       )}
     </div>
   );
