@@ -107,6 +107,8 @@ const StatCard = ({
   });
   const [isLoading, setIsLoading] = useState(false); // Added loading state
   const [isTrend, setIsTrend] = useState(false); // Added loading state
+  const [isSubmitting, setIsSubmitting] = useState(false); // Added submitting state
+
 
   const handleNewItemSubmit = async () => {
     if (!newItemDate) return;
@@ -125,30 +127,38 @@ const StatCard = ({
   };
 
   const handleEditItem = async (itemId: string, editBtn: boolean = false) => {
-    if (!editingItem || editingItem.itemId !== itemId || editBtn) {
-      const item = items.find((i) => i.id === itemId);
-      if (item) {
-        setNewItemValue(item.numericValue.toString());
-        setNewItemNote(item.note || "");
-        setNewItemDate(new Date(item.dateOfEntry));
-        setEditingItem({
-          itemId,
-          statId: stat.id,
-          originalValue: item.numericValue.toString(),
-          originalNote: item.note || "",
-          originalDate: new Date(item.dateOfEntry)
-        });
+    setIsSubmitting(true); // Set loading state to true before submitting
+    try {
+      if (!editingItem || editingItem.itemId !== itemId || editBtn) {
+        const item = items.find((i) => i.id === itemId);
+        if (item) {
+          setNewItemValue(item.numericValue.toString());
+          setNewItemNote(item.note || "");
+          setNewItemDate(new Date(item.dateOfEntry));
+          setEditingItem({
+            itemId,
+            statId: stat.id,
+            originalValue: item.numericValue.toString(),
+            originalNote: item.note || "",
+            originalDate: new Date(item.dateOfEntry)
+          });
+        }
+      } else {
+        const updatedData = {
+          dateOfEntry: newItemDate!,
+          numericValue: parseFloat(newItemValue.replace(",", ".")),
+          note: newItemNote
+        };
+        await onEditItem(stat.id, itemId, updatedData);
+        const result = await getItems(stat.id, dateRange);
+        setItems(withTrend(result.data).data);
+        resetForm();
       }
-    } else {
-      const updatedData = {
-        dateOfEntry: newItemDate!,
-        numericValue: parseFloat(newItemValue.replace(",", ".")),
-        note: newItemNote
-      };
-      await onEditItem(stat.id, itemId, updatedData);
-      const result = await getItems(stat.id, dateRange);
-      setItems(withTrend(result.data).data);
-      resetForm();
+    } catch (error) {
+      // Handle errors appropriately, e.g., display an error message
+      console.error("Error editing item:", error);
+    } finally {
+      setIsSubmitting(false); // Set loading state to false after submitting (success or failure)
     }
   };
 
@@ -171,7 +181,7 @@ const StatCard = ({
     newItemNote ||
     newItemDate ||
     editingItem
-  );
+  ) || isSubmitting;
 
   const handleGetItems = async () => {
     setIsLoading(true); // Set loading to true
@@ -329,7 +339,7 @@ const StatCard = ({
           </div>
           <div className="flex space-x-2">
             <Button type="submit" disabled={isButtonDisabled}>
-              {editingItem ? "Edit" : "Add"}
+              {isSubmitting ? "Saving..." : (editingItem ? "Edit" : "Add")}
             </Button>
 
             <Button

@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "db": "docker-compose up",
     "postinstall": "prisma generate && prisma migrate deploy"
   },
   "dependencies": {
