@@ -143,13 +143,13 @@ export default function StatsPage() {
         <Tabs defaultValue={stats[0].id} className="">
           <TabsList className="flex flex-wrap gap-2">
             {stats.map((stat) => (
-              <TabsTrigger value={stat.id} className="flex-grow">
+              <TabsTrigger key={stat.id} value={stat.id} className="flex-grow">
                 {stat.name}
               </TabsTrigger>
             ))}
           </TabsList>
           {stats.map((stat) => (
-            <TabsContent value={stat.id}>
+            <TabsContent key={stat.id} value={stat.id}>
               <StatCard
                 key={stat.id}
                 stat={stat}
